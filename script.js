@@ -1,3 +1,19 @@
+// 🔐 접속 비밀번호
+const SITE_PASSWORD = "2026";
+
+// 🔐 관리자 비밀번호
+const ADMIN_PASSWORD = "0830";
+
+// 👉 접속 차단
+if (!sessionStorage.getItem("auth")) {
+  const input = prompt("비밀번호 입력");
+  if (input === SITE_PASSWORD) {
+    sessionStorage.setItem("auth", "ok");
+  } else {
+    document.body.innerHTML = "접근 불가";
+  }
+}
+
 // ----------------------------
 // Firebase 설정
 // ----------------------------
@@ -14,96 +30,144 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ----------------------------
-// 뽑기판 초기화
-// ----------------------------
-const rows = 10, cols = 5;
-const board = document.getElementById("board");
-const resultsList = document.getElementById("results");
-const cells = [];
 
-for(let r=0;r<rows;r++){
-  const tr = document.createElement("tr");
-  const row = [];
-  for(let c=0;c<cols;c++){
-    const td = document.createElement("td");
-    td.textContent = r*cols+c+1;
-    td.addEventListener("click", ()=> selectCell(r,c));
-    tr.appendChild(td);
-    row.push(td);
-  }
-  board.appendChild(tr);
-  cells.push(row);
+// 🎁 상품 초기화
+function initPrizes() {
+  const data = [
+    { name: "★15000원 할인★", weight: 1, stock: 1 },
+    { name: "5000원 할인", weight: 4, stock: 4 },
+    { name: "3000원 할인", weight: 10, stock: 10 },
+    { name: "1000원 할인", weight: 15, stock: 15 },
+    { name: "꽝", weight: 20, stock: 20 }
+  ];
+  db.ref("game/prizes").set(data);
 }
 
-// ----------------------------
-// 셀 선택 함수
-// ----------------------------
-async function selectCell(r,c){
-  const nickname = document.getElementById("nickname").value.trim();
-  if(!nickname){ alert("닉네임을 입력하세요!"); return; }
+// 🎯 보드 생성
+function createBoard() {
+  const board = document.getElementById("board");
+  if (!board) return;
 
-  const cellRef = db.ref(`board/${r}/${c}`);
-  const snapshot = await cellRef.get();
-  if(snapshot.exists()){ alert("이미 선택된 칸입니다!"); return; }
+  board.innerHTML = "";
 
-  // 상품 불러오기
-  const prizeSnapshot = await db.ref("prizes").get();
-  if(!prizeSnapshot.exists()){ alert("상품 정보가 없습니다."); return; }
-  const prizes = Object.values(prizeSnapshot.val()).filter(p => p.stock > 0);
+  for (let i = 1; i <= 50; i++) {
+    let div = document.createElement("div");
+    div.className = "cell";
+    div.innerText = i;
+    div.onclick = () => document.getElementById("number").value = i;
+    board.appendChild(div);
+  }
+}
 
-  if(prizes.length === 0){ alert("모든 상품이 소진되었습니다."); return; }
+// 🎲 뽑기
+function draw() {
+  const name = document.getElementById("name").value.trim();
+  const number = parseInt(document.getElementById("number").value);
 
-  // 확률 기반 선택
-  let totalWeight = prizes.reduce((sum,p)=>sum+p.probability,0);
-  let rand = Math.random() * totalWeight;
-  let selected;
-  for(let p of prizes){
-    rand -= p.probability;
-    if(rand <= 0){
-      selected = p;
-      break;
+  if (!name) return alert("닉네임 입력");
+  if (!number) return alert("번호 입력");
+
+  const boardRef = db.ref("game/board/" + number);
+  const prizesRef = db.ref("game/prizes");
+
+  boardRef.once("value", snap => {
+    if (snap.exists()) {
+      alert("이미 선택된 번호");
+      return;
     }
-  }
 
-  // 재고 감소
-  const prizeIndex = prizes.indexOf(selected);
-  db.ref(`prizes/${prizeIndex}/stock`).set(selected.stock - 1);
+    prizesRef.once("value", psnap => {
+      let prizes = psnap.val();
 
-  // 선택 기록 저장
-  cellRef.set({nickname: nickname, prize: selected.name, timestamp: Date.now()});
-}
+      let available = prizes.filter(p => p.stock > 0);
+      let total = available.reduce((a,b)=>a+b.weight,0);
+      let rand = Math.random()*total;
 
-// ----------------------------
-// 결과 추가 함수
-// ----------------------------
-function addResult(name, number, prize){
-  const li = document.createElement("li");
-  li.textContent = `${name}님 → ${number}번: ${prize}`;
-  resultsList.appendChild(li);
-}
-
-// ----------------------------
-// 실시간 동기화
-// ----------------------------
-db.ref("board").on("value", snapshot=>{
-  const data = snapshot.val() || {};
-  resultsList.innerHTML = "";
-  for(let r=0;r<rows;r++){
-    for(let c=0;c<cols;c++){
-      const td = cells[r][c];
-      if(data[r] && data[r][c]){
-        td.textContent = "★";
-        td.className = "selected";
-        const prize = data[r][c].prize;
-        if(prize.includes("15000")) td.classList.add("prize1");
-        else if(prize.includes("5000")) td.classList.add("prize2");
-        else td.classList.add("prize0");
-        addResult(data[r][c].nickname, r*cols+c+1, prize);
-      } else {
-        td.textContent = r*cols+c+1;
-        td.className = "";
+      let selected;
+      for (let p of available) {
+        rand -= p.weight;
+        if (rand <= 0) {
+          selected = p;
+          break;
+        }
       }
+
+      // 재고 감소
+      let index = prizes.findIndex(p => p.name === selected.name);
+      prizes[index].stock--;
+
+      prizesRef.set(prizes);
+
+      // 보드 기록
+      boardRef.set({
+        prize: selected.name,
+        name: name
+      });
+
+      db.ref("game/logs").push({
+        name, number, prize: selected.name
+      });
+
+      document.getElementById("result").innerText =
+        `${name} → ${selected.name}`;
+
+      // 🎉 효과
+      if (selected.name !== "꽝") {
+        confetti();
+        document.getElementById("winSound").play();
+      } else {
+        document.getElementById("loseSound").play();
+      }
+
+      document.getElementById("name").value = "";
+      document.getElementById("number").value = "";
+    });
+  });
+}
+
+// 🔥 실시간 보드
+db.ref("game/board").on("value", snap => {
+  const data = snap.val() || {};
+
+  document.querySelectorAll(".cell").forEach(c => {
+    let num = parseInt(c.innerText);
+
+    if (data[num]) {
+      c.classList.add("used");
+      c.innerText = data[num].prize;
     }
-  }
+  });
 });
+
+// 🔥 실시간 재고
+db.ref("game/prizes").on("value", snap => {
+  const list = document.getElementById("stock");
+  if (!list) return;
+
+  const prizes = snap.val() || [];
+
+  list.innerHTML = "";
+  prizes.forEach(p => {
+    let li = document.createElement("li");
+    li.innerText = `${p.name}: ${p.stock}`;
+    list.appendChild(li);
+  });
+});
+
+// 🔐 관리자 로그인
+function login() {
+  if (document.getElementById("pw").value === ADMIN_PASSWORD) {
+    document.getElementById("adminPanel").style.display = "block";
+  } else {
+    alert("비번 틀림");
+  }
+}
+
+// 🔄 초기화
+function resetGame() {
+  if (!confirm("초기화?")) return;
+  db.ref("game").remove();
+}
+
+// 시작
+createBoard();

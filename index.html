@@ -2,23 +2,39 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>운영용 실시간 뽑기판</title>
+<title>실시간 뽑기</title>
+
 <link rel="stylesheet" href="style.css">
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
-<body>
-<h2>실시간 뽑기판</h2>
-<div>
-  닉네임: <input id="nickname" placeholder="닉네임 입력">
-</div>
-<table id="board"></table>
 
-<div id="info">
-  <h3>선택 결과</h3>
-  <ul id="results"></ul>
+<body>
+
+<div class="container">
+<h1>🎁 실시간 뽑기 🎁</h1>
+
+<input id="name" placeholder="닉네임">
+<input id="number" type="number" placeholder="번호 (1~50)">
+
+<button onclick="draw()">🎯 뽑기</button>
+
+<h2 id="result"></h2>
+
+<div id="board"></div>
+
+<h3>📦 남은 수량</h3>
+<ul id="stock"></ul>
 </div>
+
+<!-- 🎉 효과 -->
+<canvas id="confetti"></canvas>
+<audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+<audio id="loseSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
 <script src="script.js"></script>
+
 </body>
 </html>
