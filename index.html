@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>운영용 실시간 뽑기판</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<h2>실시간 뽑기판</h2>
+<div>
+  닉네임: <input id="nickname" placeholder="닉네임 입력">
+</div>
+<table id="board"></table>
+
+<div id="info">
+  <h3>선택 결과</h3>
+  <ul id="results"></ul>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
