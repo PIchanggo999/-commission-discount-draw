@@ -1,40 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
 <title>실시간 뽑기</title>
-
 <link rel="stylesheet" href="style.css">
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
 
-<div class="container">
-<h1>🎁 실시간 뽑기 🎁</h1>
+<div id="lockScreen" class="card">
+  <h2>🔐 비밀번호</h2>
+  <input id="accessPw" type="password">
+  <button onclick="checkAccess()">입장</button>
+</div>
+
+<div id="realContent" style="display:none;">
+
+<div class="card">
+<h1>🎯 실시간 뽑기</h1>
 
 <input id="name" placeholder="닉네임">
-<input id="number" type="number" placeholder="번호 (1~50)">
-
-<button onclick="draw()">🎯 뽑기</button>
+<input id="number" placeholder="번호 (선택)">
+<button class="draw-btn" onclick="draw()">뽑기</button>
 
 <h2 id="result"></h2>
 
 <div id="board"></div>
 
-<h3>📦 남은 수량</h3>
-<ul id="stock"></ul>
+<div class="info-area">
+
+<div class="box">
+<h3>사용 방법</h3>
+<p>
+닉네임 입력 → 번호 선택<br>
+미입력 시 자동 생성<br>
+중복 불가
+</p>
 </div>
 
-<!-- 🎉 효과 -->
-<canvas id="confetti"></canvas>
-<audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-<audio id="loseSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+<div class="box">
+<h3>남은 수량</h3>
+<ul id="stock"></ul>
+<button onclick="goAdmin()">관리자</button>
+</div>
+
+</div>
+
+</div>
+</div>
+
+<audio id="failSound" src="fail.mp3"></audio>
+<audio id="normalSound" src="normal.mp3"></audio>
+<audio id="bigSound" src="big.mp3"></audio>
 
 <script src="script.js"></script>
-
 </body>
 </html>

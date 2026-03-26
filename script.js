@@ -1,22 +1,6 @@
-// 🔐 접속 비밀번호
-const SITE_PASSWORD = "2026";
-
-// 🔐 관리자 비밀번호
+const ACCESS_PASSWORD = "2026";
 const ADMIN_PASSWORD = "0830";
 
-// 👉 접속 차단
-if (!sessionStorage.getItem("auth")) {
-  const input = prompt("비밀번호 입력");
-  if (input === SITE_PASSWORD) {
-    sessionStorage.setItem("auth", "ok");
-  } else {
-    document.body.innerHTML = "접근 불가";
-  }
-}
-
-// ----------------------------
-// Firebase 설정
-// ----------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDIeMvu1zQP6V4WNFkBeq3lPhKzSOo5EL8",
   authDomain: "commission-discount-draw.firebaseapp.com",
@@ -24,150 +8,191 @@ const firebaseConfig = {
   projectId: "commission-discount-draw",
   storageBucket: "commission-discount-draw.firebasestorage.app",
   messagingSenderId: "425410036868",
-  appId: "1:425410036868:web:c3f999f5509cd73833eed1",
-  measurementId: "G-4SZ4ZFSH8P"
+  appId: "1:425410036868:web:c3f999f5509cd73833eed1"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+let used = {};
+let prizes = [];
 
-// 🎁 상품 초기화
-function initPrizes() {
-  const data = [
-    { name: "★15000원 할인★", weight: 1, stock: 1 },
-    { name: "5000원 할인", weight: 4, stock: 4 },
-    { name: "3000원 할인", weight: 10, stock: 10 },
-    { name: "1000원 할인", weight: 15, stock: 15 },
-    { name: "꽝", weight: 20, stock: 20 }
-  ];
-  db.ref("game/prizes").set(data);
-}
+// 🔥 실시간 동기화
+db.ref("state").on("value", snap=>{
+  let data = snap.val();
+  if(!data) return;
 
-// 🎯 보드 생성
-function createBoard() {
-  const board = document.getElementById("board");
-  if (!board) return;
+  used = data.used || {};
+  prizes = data.prizes || [];
 
-  board.innerHTML = "";
+  updateStock();
+  renderBoard();
+});
 
-  for (let i = 1; i <= 50; i++) {
-    let div = document.createElement("div");
-    div.className = "cell";
-    div.innerText = i;
-    div.onclick = () => document.getElementById("number").value = i;
-    board.appendChild(div);
+// 🎯 보드
+function createBoard(){
+  const board=document.getElementById("board");
+  if(!board) return;
+
+  board.innerHTML="";
+  for(let i=1;i<=50;i++){
+    let d=document.createElement("div");
+    d.className="cell";
+    d.innerText=i;
+
+    if(used[i]) d.classList.add("used");
+
+    d.onclick=()=>{
+      if(used[i]) return;
+      document.getElementById("number").value=i;
+    };
+
+    board.appendChild(d);
   }
 }
+
+function renderBoard(){ createBoard(); }
 
 // 🎲 뽑기
-function draw() {
-  const name = document.getElementById("name").value.trim();
-  const number = parseInt(document.getElementById("number").value);
+function draw(){
+  const name=document.getElementById("name").value.trim();
+  let number=parseInt(document.getElementById("number").value);
 
-  if (!name) return alert("닉네임 입력");
-  if (!number) return alert("번호 입력");
+  if(!name) return alert("닉네임 입력");
 
-  const boardRef = db.ref("game/board/" + number);
-  const prizesRef = db.ref("game/prizes");
+  if(!number){
+    do{ number=Math.floor(Math.random()*50)+1; }
+    while(used[number]);
+  }
 
-  boardRef.once("value", snap => {
-    if (snap.exists()) {
-      alert("이미 선택된 번호");
-      return;
-    }
+  if(used[number]) return alert("이미 선택됨");
 
-    prizesRef.once("value", psnap => {
-      let prizes = psnap.val();
+  let available=prizes.filter(p=>p.stock>0);
+  let total=available.reduce((a,b)=>a+b.weight,0);
+  let rand=Math.random()*total;
 
-      let available = prizes.filter(p => p.stock > 0);
-      let total = available.reduce((a,b)=>a+b.weight,0);
-      let rand = Math.random()*total;
+  let selected;
+  for(let p of available){
+    rand-=p.weight;
+    if(rand<=0){ selected=p; break; }
+  }
 
-      let selected;
-      for (let p of available) {
-        rand -= p.weight;
-        if (rand <= 0) {
-          selected = p;
-          break;
-        }
-      }
+  selected.stock--;
+  used[number]=true;
 
-      // 재고 감소
-      let index = prizes.findIndex(p => p.name === selected.name);
-      prizes[index].stock--;
+  db.ref("state").set({prizes,used});
+  db.ref("logs").push({
+    name,number,prize:selected.name,time:new Date().toLocaleString()
+  });
 
-      prizesRef.set(prizes);
+  showResult(name,selected.name);
+}
 
-      // 보드 기록
-      boardRef.set({
-        prize: selected.name,
-        name: name
-      });
+// 🎉 결과
+function showResult(name,prize){
+  let r=document.getElementById("result");
+  if(prize==="꽝"){
+    r.innerText=`${name}님: 꽝! 다음 기회에!`;
+  }else{
+    r.innerText=`${name}님: ${prize} 당첨!`;
+  }
+}
 
-      db.ref("game/logs").push({
-        name, number, prize: selected.name
-      });
-
-      document.getElementById("result").innerText =
-        `${name} → ${selected.name}`;
-
-      // 🎉 효과
-      if (selected.name !== "꽝") {
-        confetti();
-        document.getElementById("winSound").play();
-      } else {
-        document.getElementById("loseSound").play();
-      }
-
-      document.getElementById("name").value = "";
-      document.getElementById("number").value = "";
-    });
+// 📦 재고
+function updateStock(){
+  let ul=document.getElementById("stock");
+  if(!ul) return;
+  ul.innerHTML="";
+  prizes.forEach(p=>{
+    let li=document.createElement("li");
+    li.innerText=`${p.name}: ${p.stock}`;
+    ul.appendChild(li);
   });
 }
 
-// 🔥 실시간 보드
-db.ref("game/board").on("value", snap => {
-  const data = snap.val() || {};
+// 🔐 관리자
+function login(){
+  let pw=document.getElementById("pw").value;
+  if(pw!==ADMIN_PASSWORD) return alert("비번 틀림");
 
-  document.querySelectorAll(".cell").forEach(c => {
-    let num = parseInt(c.innerText);
+  document.getElementById("adminPanel").style.display="block";
+  loadAdminStock();
+  loadLogs();
+}
 
-    if (data[num]) {
-      c.classList.add("used");
-      c.innerText = data[num].prize;
+// 🛠 관리자 수량 수정
+function loadAdminStock(){
+  let div=document.getElementById("adminStock");
+  div.innerHTML="";
+
+  prizes.forEach((p,i)=>{
+    let input=document.createElement("input");
+    input.value=p.stock;
+
+    input.onchange=()=>{
+      prizes[i].stock=parseInt(input.value);
+      db.ref("state").set({prizes,used});
+    };
+
+    div.append(`${p.name} `);
+    div.appendChild(input);
+    div.appendChild(document.createElement("br"));
+  });
+}
+
+// 📊 로그
+function loadLogs(){
+  db.ref("logs").on("value",snap=>{
+    let logs=snap.val()||{};
+    let list=document.getElementById("logList");
+    list.innerHTML="";
+    for(let k in logs){
+      let l=logs[k];
+      let li=document.createElement("li");
+      li.innerText=`${l.name}/${l.number}/${l.prize}/${l.time}`;
+      list.appendChild(li);
     }
   });
-});
-
-// 🔥 실시간 재고
-db.ref("game/prizes").on("value", snap => {
-  const list = document.getElementById("stock");
-  if (!list) return;
-
-  const prizes = snap.val() || [];
-
-  list.innerHTML = "";
-  prizes.forEach(p => {
-    let li = document.createElement("li");
-    li.innerText = `${p.name}: ${p.stock}`;
-    list.appendChild(li);
-  });
-});
-
-// 🔐 관리자 로그인
-function login() {
-  if (document.getElementById("pw").value === ADMIN_PASSWORD) {
-    document.getElementById("adminPanel").style.display = "block";
-  } else {
-    alert("비번 틀림");
-  }
 }
 
 // 🔄 초기화
-function resetGame() {
-  if (!confirm("초기화?")) return;
-  db.ref("game").remove();
+function resetAll(){
+  if(!confirm("전체 초기화?")) return;
+
+  used={};
+  prizes.forEach(p=>p.stock=p.weight);
+
+  db.ref("state").set({prizes,used});
+  db.ref("logs").remove();
 }
+
+function resetStock(){
+  prizes.forEach(p=>p.stock=p.weight);
+  db.ref("state").set({prizes,used});
+}
+
+// CSV
+function downloadCSV(){
+  db.ref("logs").once("value",snap=>{
+    let logs=snap.val()||{};
+    let csv="name,number,prize,time\n";
+
+    for(let k in logs){
+      let l=logs[k];
+      csv+=`${l.name},${l.number},${l.prize},${l.time}\n`;
+    }
+
+    let blob=new Blob([csv]);
+    let a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="log.csv";
+    a.click();
+  });
+}
+
+// 이동
+function goAdmin(){location.href="admin.html";}
+function goMain(){location.href="index.html";}
 
 // 시작
 createBoard();
