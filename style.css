@@ -1,42 +1,280 @@
 body {
-  background:#fff;
-  font-family:'Times New Roman';
+  margin: 0;
+  background-color: #000;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-x: hidden;
+  border: 10px solid #E8FF06;
+  box-sizing: border-box;
+  min-height: 100vh;
 }
 
-.card {
-  width:90%;
-  max-width:600px;
-  margin:20px auto;
-  padding:20px;
-  border:2px solid #fbc02d;
-  background:#fffde7;
-  text-align:center;
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-button {
-  background:#fbc02d;
-  border:none;
-  padding:8px;
+/* 무지개 전광판 배너 CSS */
+.marquee-container {
+  width: 100%;
+  max-width: 1400px;
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 8px 0;
+  margin-bottom: 20px;
+  position: relative;
+  border-radius: 5px;
+  border: 2px solid #fff;
+}
+.marquee-text {
+  display: inline-block;
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 2px #000;
+  animation: marquee 12s linear infinite;
+}
+@keyframes marquee {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
 }
 
+.main-title {
+  text-align: center;
+  font-size: 6.5rem; 
+  color: #bc13fe;
+  margin: 0 0 20px 0;
+  font-weight: 900;
+  position: relative;
+  display: inline-block;
+}
+
+.glitch {
+  animation: glitch 1s linear infinite;
+}
+.glitch:before, .glitch:after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+.glitch:before {
+  animation: glitchTop 1s linear infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+  -webkit-clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+  transform: translate(-3px, -2px);
+  opacity: 0.8;
+  color: #02F0FF;
+}
+.glitch:after {
+  animation: glitchBot 1.5s linear infinite;
+  clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
+  -webkit-clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
+  transform: translate(3px, 2px);
+  opacity: 0.8;
+  color: #E8FF06;
+}
+@keyframes glitch {
+  2%,64% { transform: translate(2px,0) skew(0deg); }
+  4%,60% { transform: translate(-2px,0) skew(0deg); }
+  62% { transform: translate(0,0) skew(3deg); }
+}
+@keyframes glitchTop {
+  2%,64% { transform: translate(2px,-2px); }
+  4%,60% { transform: translate(-2px,2px); }
+  62% { transform: translate(10px,-1px) skew(-5deg); }
+}
+@keyframes glitchBot {
+  2%,64% { transform: translate(-2px,2px); }
+  4%,60% { transform: translate(2px,-2px); }
+  62% { transform: translate(-10px,1px) skew(5deg); }
+}
+
+/* 우측 사이드바로 이동된 조작부 세로 정렬 */
+.top-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px 25px;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.input-group .label {
+  white-space: nowrap;
+  font-weight: bold;
+  color: #B0FF2D;
+  font-size: 1.1rem;
+}
+.input-group input {
+  margin-bottom: 0;
+  border-color: #B0FF2D;
+}
 .draw-btn {
-  background:#ffca28;
+  margin-top: 10px;
+  font-size: 1.3rem;
 }
 
-#board {
-  display:grid;
-  grid-template-columns: repeat(10,1fr);
-  gap:5px;
+.recent-log {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: bold;
+  min-height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  border-radius: 8px;
 }
 
-.cell {
-  border:1px solid #ccc;
-  padding:10px;
-  cursor:pointer;
+/* 컨테이너 (좌/우 분리 유지) */
+.container {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  width: 100%;
+  max-width: 1400px;
+  justify-content: center;
+  align-items: flex-start;
 }
 
-.cell.used {
-  background:#ccc;
-  color:#666;
-  cursor:not-allowed;
+.container-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.board-container {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.grid-5x6 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.slot {
+  aspect-ratio: 1.4 / 1;
+  background: #111;
+  border: 1px solid #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #B0FF2D;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: inset 0 0 5px rgba(57, 255, 20, 0.2);
+}
+
+.slot:hover {
+  border-color: #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 15px #00f0ff;
+  transform: scale(1.02);
+}
+
+.slot.selected {
+  background: #222;
+  color: #444;
+  border-color: #222;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.slot.active {
+    border-color: #faff00;
+    box-shadow: 0 0 20px #faff00;
+}
+
+.admin-slot { display: flex; flex-direction: column; text-align: center; justify-content: center; }
+.slot-num { font-size: 1.5rem; font-weight: bold; color: #B0FF2D; }
+.selected-admin { background: #1a1a1a; border: 1px solid #ff3ca6; }
+.selected-admin .slot-num { color: #fff; }
+.slot-info { font-size: 0.8rem; margin-top: 5px; color: #fff; }
+.slot-info b { color: #faff00; }
+
+.glass-box { background: #0a0a0a; padding: 25px; border: 1px solid #333; }
+.info-box { background: #050505; padding: 15px; border: 1px solid #333; }
+
+.bg-white-cyan-text { background-color: #ffffff !important; border: 2px solid #02F0FF !important; }
+.bg-white-cyan-text h3, .bg-white-cyan-text p, .bg-white-cyan-text b, .bg-white-cyan-text ul, .bg-white-cyan-text li { color: #02F0FF !important; }
+.bg-white-cyan-text h3 { border-bottom: 2px solid #02F0FF; padding-bottom: 5px; }
+
+.shadow-yellow { box-shadow: 0 0 20px rgba(250, 255, 0, 0.3); border: 1px solid #faff00; }
+.shadow-pink { box-shadow: 0 0 20px rgba(255, 60, 166, 0.3); border: 1px solid #ff3ca6; }
+.shadow-lime { box-shadow: 0 0 20px rgba(57, 255, 20, 0.3); border: 1px solid #B0FF2D; }
+
+.border-cyan { border-left: 5px solid #00f0ff; }
+.border-lime { border-left: 5px solid #B0FF2D; }
+
+.stock-full-color { background: #B0FF2D !important; color: #8004BD !important; border: none !important; padding: 20px; border-radius: 4px; }
+.stock-full-color h3 { color: #8004BD !important; margin-top: 0; border-bottom: 2px solid #8004BD; padding-bottom: 5px; }
+
+.stock-list { list-style: none; padding: 0; margin: 0; }
+.stock-list li { display: flex; justify-content: space-between; padding: 10px 0; font-size: 1.1rem; font-weight: bold; border-bottom: 1px solid rgba(128, 4, 189, 0.2); }
+
+input { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; box-sizing: border-box; }
+button { width: 100%; padding: 15px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.btn-yellow { background: #faff00; color: #000; }
+.btn-pink { background: #ff3ca6; color: #fff; }
+.btn-lime { background: #B0FF2D; color: #000; }
+.btn-small { background: #222; color: #888; font-size: 0.7rem; margin-top: 10px; }
+
+.admin-stock-row { display: flex; gap: 5px; margin-bottom: 5px; }
+.admin-stock-row input { padding: 5px; margin-bottom: 0; font-size: 0.8rem; }
+.log-list { padding-left: 20px; font-size: 0.9rem; }
+
+.draw-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 9999; }
+.draw-result { text-align: center; padding: 60px; border: 4px double #ff3ca6; box-shadow: 0 0 40px #ff3ca6; }
+
+/* 모바일 전용 반응형 수정 (좌우 배치 유지) */
+@media (max-width: 1024px) {
+  .main-title { font-size: 3.5rem; }
+  .recent-log { font-size: 1.2rem; }
+  
+  .container { 
+    flex-direction: row; 
+    gap: 10px; 
+    padding: 0;
+  }
+  
+  .board-container { flex: 1.8; }
+  .sidebar { 
+    flex: 1; 
+    min-width: 140px; 
+  }
+  
+  .slot { font-size: 1rem; }
+  .slot-num { font-size: 1rem; }
+  
+  .glass-box, .info-box { padding: 10px; }
+  .input-group .label { font-size: 0.9rem; }
+  .top-controls { padding: 10px; }
+  
+  .stock-list li { font-size: 0.85rem; }
+  .btn-small, .admin-stock-row input, .log-list { font-size: 0.75rem; }
 }

@@ -2,197 +2,267 @@ const ACCESS_PASSWORD = "2026";
 const ADMIN_PASSWORD = "0830";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDIeMvu1zQP6V4WNFkBeq3lPhKzSOo5EL8",
+  apiKey: "AIzaSy...", 
   authDomain: "commission-discount-draw.firebaseapp.com",
   databaseURL: "https://commission-discount-draw-default-rtdb.firebaseio.com",
   projectId: "commission-discount-draw",
-  storageBucket: "commission-discount-draw.firebasestorage.app",
-  messagingSenderId: "425410036868",
-  appId: "1:425410036868:web:c3f999f5509cd73833eed1"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let used = {};
 let prizes = [];
 
-// 🔥 실시간 동기화
-db.ref("state").on("value", snap=>{
-  let data = snap.val();
-  if(!data) return;
+const defaultPrizes = [
+    { name: "★15000원 할인★", weight: 1, stock: 1 },
+    { name: "5000원 할인", weight: 4, stock: 4 },
+    { name: "3000원 할인", weight: 10, stock: 10 },
+    { name: "1000원 할인", weight: 15, stock: 15 },
+    { name: "꽝", weight: 20, stock: 20 }
+];
 
+function checkAccess(){
+  if(document.getElementById("accessPw").value !== ACCESS_PASSWORD) return alert("비밀번호가 틀렸습니다.");
+  document.getElementById("lockScreen").style.display = "none";
+  document.getElementById("realContent").style.display = "flex";
+  renderBoard();
+}
+
+function login(){
+  if(document.getElementById("pw").value !== ADMIN_PASSWORD) return alert("비밀번호 불일치");
+  document.getElementById("adminLogin").style.display = "none";
+  document.getElementById("adminPanel").style.display = "flex";
+  loadLogs();
+}
+
+db.ref("state").on("value", snap => {
+  let data = snap.val();
+  if(!data) {
+    db.ref("state").set({ prizes: defaultPrizes, used: {} });
+    return;
+  }
   used = data.used || {};
   prizes = data.prizes || [];
-
-  updateStock();
-  renderBoard();
+  
+  if(document.getElementById("board")) renderBoard();
+  if(document.getElementById("adminBoard")) renderAdminBoard();
+  updateStockUI();
+  if(document.getElementById("adminStock")) renderAdminStockControl();
 });
 
-// 🎯 보드
-function createBoard(){
-  const board=document.getElementById("board");
+db.ref("logs").orderByKey().limitToLast(1).on("value", snap => {
+    const recentLogDiv = document.getElementById("recentLog");
+    if(!recentLogDiv) return;
+    
+    let data = snap.val();
+    if(data) {
+        let key = Object.keys(data)[0];
+        let latest = data[key];
+        
+        if(latest.prize === "꽝") {
+            recentLogDiv.innerText = `- ${latest.name}님: ${latest.number}번 칸은 꽝이었습니다 -`;
+            recentLogDiv.style.color = "#888"; 
+        } else {
+            recentLogDiv.innerText = `- ${latest.name}님: ${latest.number}번 칸은 ${latest.prize}이었습니다 -`;
+            recentLogDiv.style.color = "#E8FF06"; 
+        }
+    } else {
+        recentLogDiv.innerText = "";
+    }
+});
+
+function renderBoard(){
+  const board = document.getElementById("board");
   if(!board) return;
-
-  board.innerHTML="";
-  for(let i=1;i<=50;i++){
-    let d=document.createElement("div");
-    d.className="cell";
-    d.innerText=i;
-
-    if(used[i]) d.classList.add("used");
-
-    d.onclick=()=>{
-      if(used[i]) return;
-      document.getElementById("number").value=i;
-    };
-
+  board.innerHTML = "";
+  for(let i=1; i<=30; i++){
+    let d = document.createElement("div");
+    d.className = "slot";
+    if(used[i]) {
+        d.classList.add("selected");
+        d.innerText = "X";
+    } else {
+        d.innerText = i;
+        d.onclick = () => { 
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+            d.classList.add('active');
+            document.getElementById("number").value = i; 
+        };
+    }
     board.appendChild(d);
   }
 }
 
-function renderBoard(){ createBoard(); }
-
-// 🎲 뽑기
-function draw(){
-  const name=document.getElementById("name").value.trim();
-  let number=parseInt(document.getElementById("number").value);
-
-  if(!name) return alert("닉네임 입력");
-
-  if(!number){
-    do{ number=Math.floor(Math.random()*50)+1; }
-    while(used[number]);
+function renderAdminBoard(){
+  const board = document.getElementById("adminBoard");
+  if(!board) return;
+  board.innerHTML = "";
+  for(let i=1; i<=30; i++){
+    let d = document.createElement("div");
+    d.className = "slot admin-slot";
+    if(used[i]) {
+        d.classList.add("selected-admin");
+        d.innerHTML = `<span class="slot-num">${i}</span><div class="slot-info">${used[i].name}<br><b>${used[i].prize}</b></div>`;
+        d.onclick = () => resetSpecificSlot(i);
+    } else {
+        d.innerHTML = `<span class="slot-num">${i}</span>`;
+    }
+    board.appendChild(d);
   }
+}
 
-  if(used[number]) return alert("이미 선택됨");
+function draw(){
+  const name = document.getElementById("name").value.trim();
+  let number = parseInt(document.getElementById("number").value);
 
-  let available=prizes.filter(p=>p.stock>0);
-  let total=available.reduce((a,b)=>a+b.weight,0);
-  let rand=Math.random()*total;
+  if(!name) return alert("닉네임을 입력해주세요!");
+  if(!number) return alert("번호를 선택해주세요!");
+  if(used[number]) return alert("이미 선택된 번호입니다.");
 
+  let available = prizes.filter(p => p.stock > 0);
+  if(available.length === 0) return alert("모든 상품이 소진되었습니다.");
+
+  let total = available.reduce((a, b) => a + parseInt(b.weight), 0);
+  let rand = Math.random() * total;
   let selected;
   for(let p of available){
-    rand-=p.weight;
-    if(rand<=0){ selected=p; break; }
+    rand -= p.weight;
+    if(rand <= 0){ selected = p; break; }
   }
 
-  selected.stock--;
-  used[number]=true;
+  prizes.find(p => p.name === selected.name).stock--;
+  used[number] = { name: name, prize: selected.name };
 
-  db.ref("state").set({prizes,used});
-  db.ref("logs").push({
-    name,number,prize:selected.name,time:new Date().toLocaleString()
-  });
+  db.ref("state").set({prizes, used});
+  db.ref("logs").push({ name, number, prize: selected.name, time: new Date().toLocaleString() });
 
-  showResult(name,selected.name);
+  showResult(name, selected.name);
+  document.getElementById("number").value = "";
 }
 
-// 🎉 결과
-function showResult(name,prize){
-  let r=document.getElementById("result");
-  if(prize==="꽝"){
-    r.innerText=`${name}님: 꽝! 다음 기회에!`;
-  }else{
-    r.innerText=`${name}님: ${prize} 당첨!`;
-  }
+function playSound(url) {
+    const audio = new Audio(url);
+    audio.play().catch(e => console.log("오디오 재생 차단됨:", e));
 }
 
-// 📦 재고
-function updateStock(){
-  let ul=document.getElementById("stock");
-  if(!ul) return;
-  ul.innerHTML="";
-  prizes.forEach(p=>{
-    let li=document.createElement("li");
-    li.innerText=`${p.name}: ${p.stock}`;
-    ul.appendChild(li);
-  });
-}
+function showResult(name, prize) {
+    const popup = document.getElementById("drawPopup");
+    const resultText = document.getElementById("resultText");
+    popup.style.display = "flex";
 
-// 🔐 관리자
-function login(){
-  let pw=document.getElementById("pw").value;
-  if(pw!==ADMIN_PASSWORD) return alert("비번 틀림");
-
-  document.getElementById("adminPanel").style.display="block";
-  loadAdminStock();
-  loadLogs();
-}
-
-// 🛠 관리자 수량 수정
-function loadAdminStock(){
-  let div=document.getElementById("adminStock");
-  div.innerHTML="";
-
-  prizes.forEach((p,i)=>{
-    let input=document.createElement("input");
-    input.value=p.stock;
-
-    input.onchange=()=>{
-      prizes[i].stock=parseInt(input.value);
-      db.ref("state").set({prizes,used});
-    };
-
-    div.append(`${p.name} `);
-    div.appendChild(input);
-    div.appendChild(document.createElement("br"));
-  });
-}
-
-// 📊 로그
-function loadLogs(){
-  db.ref("logs").on("value",snap=>{
-    let logs=snap.val()||{};
-    let list=document.getElementById("logList");
-    list.innerHTML="";
-    for(let k in logs){
-      let l=logs[k];
-      let li=document.createElement("li");
-      li.innerText=`${l.name}/${l.number}/${l.prize}/${l.time}`;
-      list.appendChild(li);
+    if (prize === "꽝") {
+        playSound("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"); 
+        resultText.innerHTML = `<span style="color:#777;">${name}님 결과</span><br><b style="color:#fff; font-size:3rem;">꽝...</b>`;
+    } else if (prize === "★15000원 할인★") {
+        playSound("https://assets.mixkit.co/active_storage/sfx/2350/2350-preview.mp3"); 
+        resultText.innerHTML = `<span style="color:#B0FF2D;">축하합니다! ${name}님</span><br><b style="color:#ff3ca6; font-size:3.5rem;">${prize}</b>`;
+        if (window.confetti) confetti({ particleCount: 250, spread: 100, origin: { y: 0.6 } });
+    } else {
+        playSound("https://assets.mixkit.co/active_storage/sfx/271/271-preview.mp3");
+        resultText.innerHTML = `<span style="color:#B0FF2D;">축하합니다! ${name}님</span><br><b style="color:#ff3ca6; font-size:3.5rem;">${prize}</b>`;
+        if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
     }
+}
+
+function renderAdminStockControl(){
+  let div = document.getElementById("adminStock");
+  if(!div) return;
+  div.innerHTML = "";
+  prizes.forEach((p, i) => {
+    let row = document.createElement("div");
+    row.className = "admin-stock-row";
+    row.innerHTML = `
+      <input type="text" value="${p.name}" onchange="updatePrize(${i}, 'name', this.value)" title="상품명">
+      <input type="number" value="${p.weight}" onchange="updatePrize(${i}, 'weight', this.value)" title="가중치(확률)">
+      <input type="number" value="${p.stock}" onchange="updatePrize(${i}, 'stock', this.value)" title="재고">
+      <button onclick="removePrize(${i})" style="width:30px; background:red; padding:2px;">X</button>
+    `;
+    div.appendChild(row);
   });
 }
 
-// 🔄 초기화
+function updatePrize(idx, field, val){
+    prizes[idx][field] = (field === 'name') ? val : parseInt(val);
+    db.ref("state/prizes").set(prizes);
+}
+
+function addNewPrize(){
+    prizes.push({ name: "새 상품", weight: 1, stock: 1 });
+    db.ref("state/prizes").set(prizes);
+}
+
+function removePrize(idx){
+    if(!confirm("이 상품을 삭제할까요?")) return;
+    prizes.splice(idx, 1);
+    db.ref("state/prizes").set(prizes);
+}
+
+function resetSpecificSlot(num){
+    if(!confirm(`${num}번 칸을 초기화하시겠습니까? (재고는 복구되지 않음)`)) return;
+    delete used[num];
+    db.ref("state/used").set(used);
+}
+
 function resetAll(){
-  if(!confirm("전체 초기화?")) return;
-
-  used={};
-  prizes.forEach(p=>p.stock=p.weight);
-
-  db.ref("state").set({prizes,used});
+  if(!confirm("판 전체와 로그를 리셋할까요?")) return;
+  db.ref("state").set({ prizes: defaultPrizes, used: {} });
   db.ref("logs").remove();
 }
 
 function resetStock(){
-  prizes.forEach(p=>p.stock=p.weight);
-  db.ref("state").set({prizes,used});
+  if(!confirm("모든 상품 수량을 초기 설정값(확률값)으로 채웁니다.")) return;
+  prizes.forEach(p => p.stock = p.weight);
+  db.ref("state/prizes").set(prizes);
 }
 
-// CSV
+function loadLogs(){
+    db.ref("logs").on("value", snap => {
+      let logs = snap.val() || {};
+      let list = document.getElementById("logList");
+      if(!list) return;
+      list.innerHTML = "";
+      Object.values(logs).reverse().slice(0, 30).forEach(l => {
+        let li = document.createElement("li");
+        li.innerText = `[${l.number}번] ${l.name}: ${l.prize}`;
+        list.appendChild(li);
+      });
+    });
+}
+
+function updateStockUI(){
+    let ul = document.getElementById("stock");
+    if(!ul) return;
+    ul.innerHTML = "";
+    
+    // 확률 계산용 전체 가중치 합산
+    let totalWeight = prizes.reduce((a, b) => a + parseInt(b.weight), 0);
+
+    prizes.forEach(p => {
+      let prob = totalWeight > 0 ? ((p.weight / totalWeight) * 100).toFixed(1) : 0;
+      let li = document.createElement("li");
+      li.style.color = p.stock > 0 ? "#8004BD" : "#666";
+      // 남은 개수 옆에 확률 출력 추가
+      li.innerHTML = `<span>${p.name}</span> <span style="font-size:0.9em;">${p.stock}개 (${prob}%)</span>`;
+      ul.appendChild(li);
+    });
+}
+
 function downloadCSV(){
-  db.ref("logs").once("value",snap=>{
-    let logs=snap.val()||{};
-    let csv="name,number,prize,time\n";
-
-    for(let k in logs){
-      let l=logs[k];
-      csv+=`${l.name},${l.number},${l.prize},${l.time}\n`;
-    }
-
-    let blob=new Blob([csv]);
-    let a=document.createElement("a");
-    a.href=URL.createObjectURL(blob);
-    a.download="log.csv";
-    a.click();
-  });
+    db.ref("logs").once("value", snap => {
+      let logs = snap.val() || {};
+      let csv = "\uFEFFname,number,prize,time\n";
+      for(let k in logs){
+        let l = logs[k];
+        csv += `"${l.name}",${l.number},"${l.prize}","${l.time}"\n`;
+      }
+      let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      let a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "draw_logs.csv";
+      a.click();
+    });
 }
 
-// 이동
-function goAdmin(){location.href="admin.html";}
-function goMain(){location.href="index.html";}
-
-// 시작
-createBoard();
+function goAdmin(){ location.href = "admin.html"; }
+function goMain(){ location.href = "index.html"; }

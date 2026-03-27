@@ -2,60 +2,71 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>실시간 뽑기</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIVE DRAW - YAMI STYLE</title>
 <link rel="stylesheet" href="style.css">
-
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
-
 <body>
 
-<div id="lockScreen" class="card">
-  <h2>🔐 비밀번호</h2>
-  <input id="accessPw" type="password">
-  <button onclick="checkAccess()">입장</button>
+<div id="lockScreen" class="container-center">
+  <div class="glass-box shadow-yellow" style="max-width:300px; text-align:center;">
+    <h2 style="color: #faff00; letter-spacing: 2px;">🔐 ACCESS</h2>
+    <input id="accessPw" type="password" placeholder="PASSWORD" onkeydown="if(event.key === 'Enter') checkAccess()">
+    <button class="btn-yellow" onclick="checkAccess()" style="margin-top: 10px;">입장하기</button>
+  </div>
 </div>
 
-<div id="realContent" style="display:none;">
+<div id="realContent" class="main-wrapper" style="display:none;">
+  <div class="marquee-container">
+    <div class="marquee-text">◈ 마/참/내【新로운 기회】☞ 정상 영업</div>
+  </div>
 
-<div class="card">
-<h1>🎯 실시간 뽑기</h1>
+  <h1 class="main-title glitch" data-text="🎯 LIVE DRAW">🎯 LIVE DRAW</h1>
 
-<input id="name" placeholder="닉네임">
-<input id="number" placeholder="번호 (선택)">
-<button class="draw-btn" onclick="draw()">뽑기</button>
+  <div id="recentLog" class="recent-log" style="width: 100%; max-width: 1400px; margin: 0 auto 20px auto;"></div>
 
-<h2 id="result"></h2>
+  <div class="container">
+    <div class="board-container">
+      <div id="board" class="board grid-5x6"></div>
+    </div>
 
-<div id="board"></div>
+    <div class="sidebar">
+      <div class="top-controls glass-box shadow-pink">
+        <div class="input-group">
+          <span class="label">닉네임:</span>
+          <input id="name" placeholder="닉네임 입력" onkeydown="if(event.key === 'Enter') draw()">
+        </div>
+        <div class="input-group">
+          <span class="label">추첨 번호:</span>
+          <input id="number" placeholder="좌측 표 클릭" readonly>
+        </div>
+        <button class="btn-pink draw-btn" onclick="draw()">▷ 뽑기</button>
+      </div>
 
-<div class="info-area">
+      <div class="info-box bg-white-cyan-text">
+        <h3>📢 뽑기판 사용 방법!</h3>
+        <p>★ <b>닉네임 입력</b><br>우측 칸에 자신의 닉네임을 입력하기<br><br>★ <b>추첨 번호 입력 (선택)</b><br>좌측 표에서 원하는 번호를 클릭해주세요.<br><br>★ <b>뽑기 버튼 클릭</b><br>"▷ 뽑기" 버튼을 눌러 추첨을 진행합니다.</p>
+      </div>
 
-<div class="box">
-<h3>사용 방법</h3>
-<p>
-닉네임 입력 → 번호 선택<br>
-미입력 시 자동 생성<br>
-중복 불가
-</p>
+      <div class="info-box stock-full-color">
+        <h3>📦 상품 현황 및 남은 수</h3>
+        <ul id="stock" class="stock-list"></ul>
+      </div>
+
+      <button onclick="goAdmin()" class="btn-small">관리자 모드</button>
+    </div>
+  </div>
 </div>
 
-<div class="box">
-<h3>남은 수량</h3>
-<ul id="stock"></ul>
-<button onclick="goAdmin()">관리자</button>
+<div id="drawPopup" class="draw-popup" onclick="this.style.display='none'">
+  <div class="draw-result">
+    <div id="resultText"></div>
+    <p style="font-size: 0.9rem; margin-top: 20px; color: #666;">(화면을 클릭하면 닫힙니다)</p>
+  </div>
 </div>
-
-</div>
-
-</div>
-</div>
-
-<audio id="failSound" src="fail.mp3"></audio>
-<audio id="normalSound" src="normal.mp3"></audio>
-<audio id="bigSound" src="big.mp3"></audio>
 
 <script src="script.js"></script>
 </body>
