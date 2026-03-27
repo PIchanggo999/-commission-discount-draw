@@ -62,15 +62,16 @@ db.ref("logs").orderByKey().limitToLast(1).on("value", snap => {
         let latest = data[key];
         
         if(latest.prize === "꽝") {
-            recentLogDiv.innerText = `☞ ${latest.name}님 ${latest.prize}! 다음 기회에! (*￣3￣)╭`;
+            recentLogDiv.innerText = `[LOG] ${latest.name}님 ${latest.prize}! MISSION FAILED.`;
         } else {
-            recentLogDiv.innerText = `☞ ${latest.name}님이 ${latest.prize}에 당첨 되셨습니다! ( •̀ .̫ •́ )✧`;
+            recentLogDiv.innerText = `[LOG] ${latest.name}님이 ${latest.prize} 획득! TARGET ACQUIRED.`;
         }
     } else {
         recentLogDiv.innerText = "[LOG] 대기 중... SYSTEM STANDBY";
     }
 });
 
+// 50칸 렌더링
 function renderBoard(){
   const board = document.getElementById("board");
   if(!board) return;
@@ -94,6 +95,7 @@ function renderBoard(){
   }
 }
 
+// 관리자 50칸 렌더링
 function renderAdminBoard(){
   const board = document.getElementById("adminBoard");
   if(!board) return;
@@ -143,10 +145,8 @@ function draw(){
   db.ref("state").set({prizes, used});
   db.ref("logs").push({ name, number, prize: selected.name, time: new Date().toLocaleString('ko-KR') });
 
-  setTimeout(() => {
-      showResult(name, selected.name);
-      document.getElementById("number").value = "";
-  }, 400); // 버튼 애니메이션을 위해 약간의 딜레이
+  showResult(name, selected.name);
+  document.getElementById("number").value = "";
 }
 
 function playSound(url) {
@@ -162,11 +162,11 @@ function showResult(name, prize) {
 
     if (prize === "꽝") {
         playSound("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"); 
-        resultText.innerHTML = `<span style="color:#02F0FF; font-family:'Orbitron',sans-serif;">[ ${name} ] RESULT</span><br><b style="color:#FD23F6; font-size:4rem; text-shadow: 0 0 20px #FD23F6;">꽝...</b>`;
+        resultText.innerHTML = `<span style="color:#02F0FF; font-family:'Orbitron',sans-serif;">[ ${name} ] RESULT</span><br><b style="color:#ff003c; font-size:4rem; text-shadow: 0 0 20px #ff003c;">꽝...</b>`;
     } else if (prize === "★15000원 할인★") {
         playSound("https://assets.mixkit.co/active_storage/sfx/2350/2350-preview.mp3"); 
-        resultText.innerHTML = `<span style="color:#B0FF2D; font-family:'Orbitron',sans-serif;">JACKPOT! [ ${name} ]</span><br><b style="color:#FD23F6; font-size:4.5rem; text-shadow: 0 0 20px #FD23F6;">${prize}</b>`;
-        if (window.confetti) confetti({ particleCount: 250, spread: 100, origin: { y: 0.6 }, colors: ['#FD23F6', '#02F0FF', '#E8FF06'] });
+        resultText.innerHTML = `<span style="color:#B0FF2D; font-family:'Orbitron',sans-serif;">JACKPOT! [ ${name} ]</span><br><b style="color:#ff3ca6; font-size:4.5rem; text-shadow: 0 0 20px #ff3ca6;">${prize}</b>`;
+        if (window.confetti) confetti({ particleCount: 250, spread: 100, origin: { y: 0.6 }, colors: ['#ff3ca6', '#02F0FF', '#E8FF06'] });
     } else {
         playSound("https://assets.mixkit.co/active_storage/sfx/271/271-preview.mp3");
         resultText.innerHTML = `<span style="color:#B0FF2D; font-family:'Orbitron',sans-serif;">SUCCESS! [ ${name} ]</span><br><b style="color:#E8FF06; font-size:4rem; text-shadow: 0 0 20px #E8FF06;">${prize}</b>`;
@@ -185,7 +185,7 @@ function renderAdminStockControl(){
       <input type="text" value="${p.name}" onchange="updatePrize(${i}, 'name', this.value)" title="상품명">
       <input type="number" value="${p.weight}" onchange="updatePrize(${i}, 'weight', this.value)" title="가중치(확률)">
       <input type="number" value="${p.stock}" onchange="updatePrize(${i}, 'stock', this.value)" title="재고">
-      <button class="cyber-btn" onclick="removePrize(${i})" style="width:40px; background:#FD23F6; color:white; padding:2px; border:none;">X</button>
+      <button class="cyber-btn" onclick="removePrize(${i})" style="width:40px; background:#ff003c; color:white; padding:2px; border:none;">X</button>
     `;
     div.appendChild(row);
   });
@@ -234,7 +234,7 @@ function loadLogs(){
       Object.values(logs).reverse().slice(0, 30).forEach(l => {
         let li = document.createElement("li");
         let timeStr = l.time ? l.time : "시간 정보 없음";
-        li.innerHTML = `<span style="color:#E8FF06;">[${timeStr}]</span> <span style="color:#FD23F6;">[${l.number}번]</span> <b>${l.name}</b> : ${l.prize}`;
+        li.innerHTML = `<span style="color:#E8FF06;">[${timeStr}]</span> <span style="color:#ff3ca6;">[${l.number}번]</span> <b>${l.name}</b> : ${l.prize}`;
         list.appendChild(li);
       });
     });
