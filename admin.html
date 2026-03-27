@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADMIN PANEL</title>
+<title>ADMIN PANEL - SYSTEM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,42 +14,38 @@
 <body>
 
 <div class="container-center" id="adminLogin">
-  <div class="glass-box shadow-lime" style="max-width:400px; width: 90%; text-align: center;">
-    <h2 style="color: #B0FF2D;">🔐 ADMIN LOGIN</h2>
+  <div class="glass-box shadow-lime cyber-border" style="max-width:400px; width: 90%; text-align: center;">
+    <h2 style="color: #B0FF2D; font-family: 'Orbitron', sans-serif;">🔐 ROOT ACCESS</h2>
     <input id="pw" type="password" placeholder="ADMIN PASSWORD" onkeydown="if(event.key === 'Enter') login()">
-    <button class="btn-lime" onclick="login()" style="margin-top: 10px;">로그인</button>
+    <button class="btn-lime cyber-btn" onclick="login()" style="margin-top: 10px;">로그인 [EXECUTE]</button>
   </div>
 </div>
 
 <div id="adminPanel" class="main-wrapper" style="display:none;">
-  <div class="marquee-container">
-    <div class="marquee-text">◈ 마/참/내【新로운 기회】☞ 정상 영업</div>
-  </div>
-
-  <h1 class="main-title glitch" data-text="📊 실시간 관리자 패널">📊 실시간 관리자 패널</h1>
+  <h1 class="main-title glitch" data-text="📊 ADMIN PANEL">📊 ADMIN PANEL</h1>
   
-  <div class="container">
+  <div class="container admin-container">
     <div class="board-container">
-      <p style="text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 10px;">(선택된 칸을 클릭하면 선택 전으로 초기화됩니다)</p>
-      <div id="adminBoard" class="board grid-5x6"></div>
+      <p style="text-align: center; color: #02F0FF; font-size: 1rem; margin-bottom: 10px; text-shadow: 0 0 5px #02F0FF;">(선택된 칸을 클릭하면 선택 전으로 초기화됩니다)</p>
+      <div id="adminBoard" class="board grid-board"></div>
     </div>
 
     <div class="sidebar">
-      <div class="info-box border-lime">
-        <h3 style="color: #B0FF2D;">🛠 상품 관리</h3>
+      <div class="info-box border-lime cyber-border">
+        <h3 style="color: #B0FF2D; margin-top:0;">🛠 상품 관리 시스템</h3>
         <div id="adminStock"></div>
-        <button onclick="addNewPrize()" style="background:#222; color:#B0FF2D; border:1px solid #B0FF2D; margin-top:10px; font-size: 0.8rem;">+ 상품 추가</button>
+        <button class="cyber-btn" onclick="addNewPrize()" style="background:#222; color:#B0FF2D; border:1px solid #B0FF2D; margin-top:10px; font-size: 0.9rem;">+ 상품 추가</button>
       </div>
       
-      <div class="btn-group" style="display: flex; flex-direction: column; gap: 5px;">
-          <button onclick="resetStock()" style="background:#444;">수량만 풀충전</button>
-          <button onclick="resetAll()" style="background:#ff3ca6; color: #000;">전체 판 초기화</button>
-          <button onclick="downloadCSV()" style="background:#bc13fe;">로그 다운로드 (CSV)</button>
-          <button onclick="goMain()" style="background:#B0FF2D; color: #000;">실시간 화면으로</button>
+      <div class="btn-group" style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="cyber-btn" onclick="resetStock()" style="background:#444; border: 1px solid #888;">수량만 풀충전</button>
+          <button class="cyber-btn" onclick="resetAll()" style="background:#FD23F6; color: #fff; border: 1px solid #FD23F6;">전체 판 초기화</button>
+          <button class="cyber-btn" onclick="downloadCSV()" style="background:#02F0FF; color: #000; border: 1px solid #02F0FF;">로그 다운로드 (CSV)</button>
+          <button class="cyber-btn" onclick="goMain()" style="background:#B0FF2D; color: #000; border: 1px solid #B0FF2D;">실시간 화면으로</button>
       </div>
 
-      <div class="info-box bg-white-cyan-text">
-          <h3>📝 실시간 로그</h3>
+      <div class="info-box bg-white-cyan-text cyber-border">
+          <h3 style="margin-top:0;">📝 실시간 추첨 로그</h3>
           <ul id="logList" class="log-list"></ul>
       </div>
     </div>

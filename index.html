@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LIVE DRAW - YAMI STYLE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -11,60 +14,65 @@
 </head>
 <body>
 
+<div class="error-404-container">
+  <div class="glitch-404" data-text="ERROR 404">ERROR 404</div>
+  <div class="glitch-file" data-text="FILE NOT FOUND">FILE NOT FOUND</div>
+</div>
+
 <div id="lockScreen" class="container-center">
-  <div class="glass-box shadow-yellow" style="max-width:300px; text-align:center;">
-    <h2 style="color: #faff00; letter-spacing: 2px;">🔐 ACCESS</h2>
+  <div class="glass-box shadow-yellow cyber-border" style="max-width:300px; text-align:center;">
+    <h2 style="color: #E8FF06; letter-spacing: 2px;">🔐 SYSTEM ACCESS</h2>
     <input id="accessPw" type="password" placeholder="PASSWORD" onkeydown="if(event.key === 'Enter') checkAccess()">
-    <button class="btn-yellow" onclick="checkAccess()" style="margin-top: 10px;">입장하기</button>
+    <button class="btn-yellow cyber-btn" onclick="checkAccess()" style="margin-top: 10px;">입장하기 [ENTER]</button>
   </div>
 </div>
 
 <div id="realContent" class="main-wrapper" style="display:none;">
   <div class="marquee-container">
-    <div class="marquee-text">◈ 마/참/내【新로운 기회】☞ 정상 영업</div>
+    <div class="marquee-text">◈ 마/참/내【新로운 기회】☞ 정상 영업 :: SYSTEM ONLINE ◈</div>
   </div>
 
   <h1 class="main-title glitch" data-text="🎯 LIVE DRAW">🎯 LIVE DRAW</h1>
 
-  <div id="recentLog" class="recent-log" style="width: 100%; max-width: 1400px; margin: 0 auto 20px auto;"></div>
+  <div id="recentLog" class="recent-log mgs-radar" style="width: 100%; max-width: 1400px; margin: 0 auto 20px auto;"></div>
 
   <div class="container">
     <div class="board-container">
-      <div id="board" class="board grid-5x6"></div>
+      <div id="board" class="board grid-board"></div>
     </div>
 
     <div class="sidebar">
-      <div class="top-controls glass-box shadow-pink">
+      <div class="top-controls glass-box shadow-pink cyber-border">
         <div class="input-group">
-          <span class="label">닉네임:</span>
+          <span class="label">USER ID (닉네임):</span>
           <input id="name" placeholder="닉네임 입력" onkeydown="if(event.key === 'Enter') draw()">
         </div>
         <div class="input-group">
-          <span class="label">추첨 번호:</span>
+          <span class="label">TARGET NO (번호):</span>
           <input id="number" placeholder="좌측 표 클릭" readonly>
         </div>
-        <button class="btn-pink draw-btn" onclick="draw()">▷ 뽑기</button>
+        <button class="btn-pink draw-btn cyber-btn" onclick="draw()">▷ 뽑기 실행</button>
       </div>
 
-      <div class="info-box bg-white-cyan-text">
-        <h3>📢 뽑기판 사용 방법!</h3>
-        <p>★ <b>닉네임 입력</b><br>우측 칸에 자신의 닉네임을 입력하기<br><br>★ <b>추첨 번호 입력 (선택)</b><br>좌측 표에서 원하는 번호를 클릭해주세요.<br><br>★ <b>뽑기 버튼 클릭</b><br>"▷ 뽑기" 버튼을 눌러 추첨을 진행합니다.</p>
+      <div class="info-box bg-white-cyan-text cyber-border">
+        <h3>📢 뽑기판 사용 매뉴얼</h3>
+        <p>★ <b>USER ID 입력</b><br>자신의 닉네임을 입력하기<br><br>★ <b>TARGET NO (선택)</b><br>좌측 표에서 원하는 번호 클릭<br><br>★ <b>추첨 실행</b><br>버튼을 눌러 시스템 가동</p>
       </div>
 
-      <div class="info-box stock-full-color">
-        <h3>📦 상품 현황 및 남은 수</h3>
+      <div class="info-box stock-full-color cyber-border">
+        <h3>📦 현재 상품 재고 현황</h3>
         <ul id="stock" class="stock-list"></ul>
       </div>
 
-      <button onclick="goAdmin()" class="btn-small">관리자 모드</button>
+      <button onclick="goAdmin()" class="btn-small cyber-btn">ADMIN MODE</button>
     </div>
   </div>
 </div>
 
 <div id="drawPopup" class="draw-popup" onclick="this.style.display='none'">
-  <div class="draw-result">
+  <div class="draw-result cyber-border">
     <div id="resultText"></div>
-    <p style="font-size: 0.9rem; margin-top: 20px; color: #666;">(화면을 클릭하면 닫힙니다)</p>
+    <p style="font-size: 0.9rem; margin-top: 20px; color: #02F0FF; letter-spacing: 1px;">(화면을 클릭하면 시스템이 종료됩니다)</p>
   </div>
 </div>
 

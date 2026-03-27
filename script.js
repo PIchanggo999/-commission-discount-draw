@@ -51,6 +51,7 @@ db.ref("state").on("value", snap => {
   if(document.getElementById("adminStock")) renderAdminStockControl();
 });
 
+// 사용자 메인 페이지 최근 기록 문구 변경
 db.ref("logs").orderByKey().limitToLast(1).on("value", snap => {
     const recentLogDiv = document.getElementById("recentLog");
     if(!recentLogDiv) return;
@@ -61,14 +62,12 @@ db.ref("logs").orderByKey().limitToLast(1).on("value", snap => {
         let latest = data[key];
         
         if(latest.prize === "꽝") {
-            recentLogDiv.innerText = `- ${latest.name}님: ${latest.number}번 칸은 꽝이었습니다 -`;
-            recentLogDiv.style.color = "#888"; 
+            recentLogDiv.innerText = `☞ ${latest.name}님 ${latest.prize}! 다음 기회에! (*￣3￣)╭`;
         } else {
-            recentLogDiv.innerText = `- ${latest.name}님: ${latest.number}번 칸은 ${latest.prize}이었습니다 -`;
-            recentLogDiv.style.color = "#E8FF06"; 
+            recentLogDiv.innerText = `☞ ${latest.name}님이 ${latest.prize}에 당첨 되셨습니다! ( •̀ .̫ •́ )✧`;
         }
     } else {
-        recentLogDiv.innerText = "";
+        recentLogDiv.innerText = "[LOG] 대기 중... SYSTEM STANDBY";
     }
 });
 
@@ -76,12 +75,13 @@ function renderBoard(){
   const board = document.getElementById("board");
   if(!board) return;
   board.innerHTML = "";
-  for(let i=1; i<=30; i++){
+  for(let i=1; i<=50; i++){
     let d = document.createElement("div");
-    d.className = "slot";
+    d.className = "slot cyber-border";
+    d.setAttribute("data-num", i); 
     if(used[i]) {
         d.classList.add("selected");
-        d.innerText = "X";
+        d.innerText = "ERROR";
     } else {
         d.innerText = i;
         d.onclick = () => { 
@@ -98,9 +98,9 @@ function renderAdminBoard(){
   const board = document.getElementById("adminBoard");
   if(!board) return;
   board.innerHTML = "";
-  for(let i=1; i<=30; i++){
+  for(let i=1; i<=50; i++){
     let d = document.createElement("div");
-    d.className = "slot admin-slot";
+    d.className = "slot admin-slot cyber-border";
     if(used[i]) {
         d.classList.add("selected-admin");
         d.innerHTML = `<span class="slot-num">${i}</span><div class="slot-info">${used[i].name}<br><b>${used[i].prize}</b></div>`;
@@ -123,6 +123,12 @@ function draw(){
   let available = prizes.filter(p => p.stock > 0);
   if(available.length === 0) return alert("모든 상품이 소진되었습니다.");
 
+  const btn = document.querySelector('.draw-btn');
+  if(btn) {
+      btn.classList.add('cyberpop-active');
+      setTimeout(() => btn.classList.remove('cyberpop-active'), 500);
+  }
+
   let total = available.reduce((a, b) => a + parseInt(b.weight), 0);
   let rand = Math.random() * total;
   let selected;
@@ -135,14 +141,17 @@ function draw(){
   used[number] = { name: name, prize: selected.name };
 
   db.ref("state").set({prizes, used});
-  db.ref("logs").push({ name, number, prize: selected.name, time: new Date().toLocaleString() });
+  db.ref("logs").push({ name, number, prize: selected.name, time: new Date().toLocaleString('ko-KR') });
 
-  showResult(name, selected.name);
-  document.getElementById("number").value = "";
+  setTimeout(() => {
+      showResult(name, selected.name);
+      document.getElementById("number").value = "";
+  }, 400); // 버튼 애니메이션을 위해 약간의 딜레이
 }
 
 function playSound(url) {
     const audio = new Audio(url);
+    audio.volume = 0.3; 
     audio.play().catch(e => console.log("오디오 재생 차단됨:", e));
 }
 
@@ -153,15 +162,15 @@ function showResult(name, prize) {
 
     if (prize === "꽝") {
         playSound("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"); 
-        resultText.innerHTML = `<span style="color:#777;">${name}님 결과</span><br><b style="color:#fff; font-size:3rem;">꽝...</b>`;
+        resultText.innerHTML = `<span style="color:#02F0FF; font-family:'Orbitron',sans-serif;">[ ${name} ] RESULT</span><br><b style="color:#FD23F6; font-size:4rem; text-shadow: 0 0 20px #FD23F6;">꽝...</b>`;
     } else if (prize === "★15000원 할인★") {
         playSound("https://assets.mixkit.co/active_storage/sfx/2350/2350-preview.mp3"); 
-        resultText.innerHTML = `<span style="color:#B0FF2D;">축하합니다! ${name}님</span><br><b style="color:#ff3ca6; font-size:3.5rem;">${prize}</b>`;
-        if (window.confetti) confetti({ particleCount: 250, spread: 100, origin: { y: 0.6 } });
+        resultText.innerHTML = `<span style="color:#B0FF2D; font-family:'Orbitron',sans-serif;">JACKPOT! [ ${name} ]</span><br><b style="color:#FD23F6; font-size:4.5rem; text-shadow: 0 0 20px #FD23F6;">${prize}</b>`;
+        if (window.confetti) confetti({ particleCount: 250, spread: 100, origin: { y: 0.6 }, colors: ['#FD23F6', '#02F0FF', '#E8FF06'] });
     } else {
         playSound("https://assets.mixkit.co/active_storage/sfx/271/271-preview.mp3");
-        resultText.innerHTML = `<span style="color:#B0FF2D;">축하합니다! ${name}님</span><br><b style="color:#ff3ca6; font-size:3.5rem;">${prize}</b>`;
-        if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        resultText.innerHTML = `<span style="color:#B0FF2D; font-family:'Orbitron',sans-serif;">SUCCESS! [ ${name} ]</span><br><b style="color:#E8FF06; font-size:4rem; text-shadow: 0 0 20px #E8FF06;">${prize}</b>`;
+        if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#E8FF06', '#02F0FF'] });
     }
 }
 
@@ -176,7 +185,7 @@ function renderAdminStockControl(){
       <input type="text" value="${p.name}" onchange="updatePrize(${i}, 'name', this.value)" title="상품명">
       <input type="number" value="${p.weight}" onchange="updatePrize(${i}, 'weight', this.value)" title="가중치(확률)">
       <input type="number" value="${p.stock}" onchange="updatePrize(${i}, 'stock', this.value)" title="재고">
-      <button onclick="removePrize(${i})" style="width:30px; background:red; padding:2px;">X</button>
+      <button class="cyber-btn" onclick="removePrize(${i})" style="width:40px; background:#FD23F6; color:white; padding:2px; border:none;">X</button>
     `;
     div.appendChild(row);
   });
@@ -224,7 +233,8 @@ function loadLogs(){
       list.innerHTML = "";
       Object.values(logs).reverse().slice(0, 30).forEach(l => {
         let li = document.createElement("li");
-        li.innerText = `[${l.number}번] ${l.name}: ${l.prize}`;
+        let timeStr = l.time ? l.time : "시간 정보 없음";
+        li.innerHTML = `<span style="color:#E8FF06;">[${timeStr}]</span> <span style="color:#FD23F6;">[${l.number}번]</span> <b>${l.name}</b> : ${l.prize}`;
         list.appendChild(li);
       });
     });
@@ -235,15 +245,13 @@ function updateStockUI(){
     if(!ul) return;
     ul.innerHTML = "";
     
-    // 확률 계산용 전체 가중치 합산
     let totalWeight = prizes.reduce((a, b) => a + parseInt(b.weight), 0);
 
     prizes.forEach(p => {
       let prob = totalWeight > 0 ? ((p.weight / totalWeight) * 100).toFixed(1) : 0;
       let li = document.createElement("li");
-      li.style.color = p.stock > 0 ? "#8004BD" : "#666";
-      // 남은 개수 옆에 확률 출력 추가
-      li.innerHTML = `<span>${p.name}</span> <span style="font-size:0.9em;">${p.stock}개 (${prob}%)</span>`;
+      li.style.color = p.stock > 0 ? "#B0FF2D" : "#555";
+      li.innerHTML = `<span>${p.name}</span> <span style="font-size:0.9em; font-family:'Orbitron',sans-serif;">${p.stock}개 (${prob}%)</span>`;
       ul.appendChild(li);
     });
 }
