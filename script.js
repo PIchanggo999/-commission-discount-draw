@@ -14,12 +14,13 @@ const db = firebase.database();
 let used = {};
 let prizes = [];
 
+// 관리자 상품 기본 세팅
 const defaultPrizes = [
-    { name: "★15000원 할인★", weight: 1, stock: 1 },
-    { name: "5000원 할인", weight: 4, stock: 4 },
-    { name: "3000원 할인", weight: 10, stock: 10 },
-    { name: "1000원 할인", weight: 15, stock: 15 },
-    { name: "꽝", weight: 20, stock: 20 }
+    { name: "★15000원 할인★", weight: 2, stock: 1000 },
+    { name: "5000원 할인", weight: 8, stock: 1000 },
+    { name: "3000원 할인", weight: 20, stock: 1000 },
+    { name: "1000원 할인", weight: 30, stock: 1000 },
+    { name: "꽝", weight: 40, stock: 1000 }
 ];
 
 function checkAccess(){
@@ -27,6 +28,13 @@ function checkAccess(){
   document.getElementById("lockScreen").style.display = "none";
   document.getElementById("realContent").style.display = "flex";
   renderBoard();
+  
+  // 입장 시 BGM 재생
+  const bgm = document.getElementById("bgm");
+  if(bgm) {
+      bgm.volume = 0.1; 
+      bgm.play().catch(e => console.log("오디오 자동 재생이 브라우저에 의해 차단됨:", e));
+  }
 }
 
 function login(){
@@ -62,9 +70,9 @@ db.ref("logs").orderByKey().limitToLast(1).on("value", snap => {
         let latest = data[key];
         
         if(latest.prize === "꽝") {
-            recentLogDiv.innerText = `[LOG] ${latest.name}님 ${latest.prize}! MISSION FAILED.`;
+            recentLogDiv.innerText = `[LOG] ${latest.name}님 ${latest.prize}! MISSION FAILED. <(＿　＿)>`;
         } else {
-            recentLogDiv.innerText = `[LOG] ${latest.name}님이 ${latest.prize} 획득! TARGET ACQUIRED.`;
+            recentLogDiv.innerText = `[LOG] ${latest.name}님이 ${latest.prize} 획득! TARGET ACQUIRED. ( •̀ .̫ •́ )✧`;
         }
     } else {
         recentLogDiv.innerText = "[LOG] 대기 중... SYSTEM STANDBY";
@@ -151,7 +159,7 @@ function draw(){
 
 function playSound(url) {
     const audio = new Audio(url);
-    audio.volume = 0.3; 
+    audio.volume = 0.4; // 기존 0.3에서 0.4로 10% 증가
     audio.play().catch(e => console.log("오디오 재생 차단됨:", e));
 }
 

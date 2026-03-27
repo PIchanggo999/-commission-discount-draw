@@ -75,9 +75,10 @@ h1, h2, h3, .marquee-text, .btn-yellow, .btn-pink, .btn-lime, .cyber-btn {
   100% { transform: translateX(-100%); }
 }
 
+/* 타이틀 크기 증가 (5rem -> 5.5rem) */
 .main-title {
   text-align: center;
-  font-size: 5rem; 
+  font-size: 5.5rem; 
   color: #FD23F6;
   margin: 0 0 20px 0;
   font-weight: 900;
@@ -357,7 +358,7 @@ button:hover { filter: brightness(1.2); }
 /* 모바일 화면 강제 좌/우 분할 레이아웃 유지 */
 @media (max-width: 1024px) {
   .main-wrapper { padding: 20px 10px; }
-  .main-title { font-size: 3rem; margin-bottom: 10px; }
+  .main-title { font-size: 3.5rem; margin-bottom: 10px; } /* 모바일 타이틀 크기도 증가 */
   .mgs-radar { font-size: 1.1rem; padding: 10px; }
   
   /* Flex Row 강제 유지 */
