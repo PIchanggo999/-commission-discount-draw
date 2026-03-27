@@ -32,7 +32,7 @@ function checkAccess(){
   // 입장 시 BGM 재생
   const bgm = document.getElementById("bgm");
   if(bgm) {
-      bgm.volume = 0.1; 
+      bgm.volume = 0.2; 
       bgm.play().catch(e => console.log("오디오 자동 재생이 브라우저에 의해 차단됨:", e));
   }
 }
@@ -159,7 +159,7 @@ function draw(){
 
 function playSound(url) {
     const audio = new Audio(url);
-    audio.volume = 0.4; // 기존 0.3에서 0.4로 10% 증가
+    audio.volume = 0.45; // 기존 0.3에서 0.4로 10% 증가
     audio.play().catch(e => console.log("오디오 재생 차단됨:", e));
 }
 
